@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📊 Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #222; color: white; text-align: center; padding: 20px; }
+        h1 { margin-bottom: 20px; }
+        .hidden { display: none; }
+        button { padding: 10px 20px; margin: 10px; background: cyan; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="login">
+        <h1>🔒 Passwort eingeben</h1>
+        <input type="password" id="password" placeholder="Passwort">
+        <button onclick="checkPassword()">🔑 Login</button>
+    </div>
+
+    <div id="dashboard" class="hidden">
+        <h1>📊 Dashboard</h1>
+        <button onclick="location.href='/manage'">🔧 Links verwalten</button>
+        <button onclick="location.href='/add'">➕ Neuen Link hinzufügen</button>
+        <button onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <script>
+        function checkPassword() {
+            const password = document.getElementById("password").value;
+            fetch("/dashboard-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password })
+            })
+            .then(res => res.text())
+            .then(data => {
+                if (data.includes("window.location.href")) {
+                    document.getElementById("login").classList.add("hidden");
+                    document.getElementById("dashboard").classList.remove("hidden");
+                    localStorage.setItem("dashboardAccess", "true");
+                } else {
+                    alert("🚫 Falsches Passwort!");
+                }
+            });
+        }
+
+        function logout() {
+            localStorage.removeItem("dashboardAccess");
+            location.reload();
+        }
+
+        if (localStorage.getItem("dashboardAccess") === "true") {
+            document.getElementById("login").classList.add("hidden");
+            document.getElementById("dashboard").classList.remove("hidden");
+        }
+    </script>
+
+</body>
+</html>

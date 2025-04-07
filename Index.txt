@@ -1,0 +1,2 @@
+<input type="password" id="password" placeholder="🔒 Passwort">
+            <button onclick="checkPassword()">🔑 Login</button>

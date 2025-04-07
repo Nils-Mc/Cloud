@@ -1,0 +1,185 @@
+ <!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Englisch Film</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            margin: 20px; 
+            background-color: #f4f4f4; 
+            color: #333; 
+            transition: background-color 0.3s, color 0.3s; 
+        }
+        .container { max-width: 600px; margin: auto; }
+        .folder-box { 
+            margin: 10px; padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 5px; 
+            display: flex; justify-content: space-between; 
+            align-items: center; 
+            background-color: #fff;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        input { padding: 5px; margin-right: 5px; border: 1px solid #ccc; border-radius: 5px; }
+        button { 
+            padding: 5px 10px; cursor: pointer; 
+            background-color: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+        }
+        button:hover { background-color: #45a049; }
+        h1 { margin-bottom: 20px; color: #333; }
+        a { color: #007BFF; text-decoration: none; margin-top: 20px; display: inline-block; }
+        a:hover { text-decoration: underline; }
+
+        /* Darkmode Styles */
+        .darkmode {
+            background-color: #121212;
+            color: white;
+        }
+        .darkmode .folder-box {
+            background-color: #333;
+            border: 1px solid #444;
+        }
+        .darkmode button {
+            background-color: #616161;
+        }
+        .darkmode button:hover {
+            background-color: #757575;
+        }
+        .darkmode a {
+            color: #61dafb;
+        }
+        .darkmode h1 {
+            color: #fff;
+        }
+
+        /* Menü oben links */
+        .menu-container {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        .menu-button {
+            background-color: #222;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .menu-button:hover {
+            background-color: #444;
+        }
+        .menu {
+            display: none;
+            position: absolute;
+            top: 40px;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            width: 200px;
+        }
+        .menu input {
+            width: 90%;
+            padding: 5px;
+            margin-bottom: 5px;
+        }
+        .menu button {
+            width: 100%;
+            margin-top: 5px;
+        }
+        .menu a {
+            display: block;
+            margin-top: 10px;
+            color: #61dafb;
+        }
+        .show-menu {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <button class="menu-button" onclick="toggleMenu()">☰ Menü</button>
+        <div class="menu" id="menu">
+            
+            <button onclick="toggleDarkMode()">🌙 Dark Mode</button>
+            <button onclick="window.location.href='/dashboard'">📊 Dashboard</button>
+        </div>
+    </div>
+
+    <h1>Videos</h1>
+    <div class="container" id="link-container">
+        <!-- Links werden per JavaScript geladen -->
+    </div>
+
+    <script>
+        async function loadLinks() {
+            const res = await fetch('/api/links');
+            const links = await res.json();
+            const container = document.getElementById("link-container");
+            container.innerHTML = links.map(link => `
+                <div class="folder-box">
+                    <strong>${link.name}</strong>
+                    <form onsubmit="unlockLink(event, ${link.id})">
+                        <input type="password" id="pw-${link.id}" placeholder="Passwort">
+                        <button type="submit">🔓 Freischalten</button>
+                    </form>
+                </div>
+            `).join("");
+        }
+
+        async function unlockLink(event, id) {
+            event.preventDefault();
+            const password = document.getElementById(`pw-${id}`).value;
+            const res = await fetch(`/link/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+            const text = await res.text();
+            document.body.innerHTML = text;
+        }
+
+        function checkPassword() {
+            const password = document.getElementById("password").value;
+            fetch("/dashboard-login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password })
+            })
+            .then(res => res.text())
+            .then(data => {
+                if (data.includes("window.location.href")) {
+                    alert("✅ Login erfolgreich!");
+                } else {
+                    alert("🚫 Falsches Passwort!");
+                }
+            });
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("darkmode");
+            localStorage.setItem("darkmode", document.body.classList.contains("darkmode") ? "enabled" : "disabled");
+        }
+
+        function toggleMenu() {
+            document.getElementById("menu").classList.toggle("show-menu");
+        }
+
+        // Darkmode beim Laden aktivieren, falls vorher eingeschaltet
+        if (localStorage.getItem("darkmode") === "enabled") {
+            document.body.classList.add("darkmode");
+        }
+
+        loadLinks();
+    </script>
+</body>
+</html>
