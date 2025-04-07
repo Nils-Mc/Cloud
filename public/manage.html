@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Links verwalten</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #222; color: white; text-align: center; }
+        table { width: 80%; margin: 20px auto; border-collapse: collapse; }
+        th, td { padding: 10px; border: 1px solid white; }
+        a, button { color: cyan; background: none; border: none; cursor: pointer; }
+        input { width: 80%; padding: 5px; margin: 5px; }
+    </style>
+</head>
+<body>
+
+    <h1>🔧 Links verwalten</h1>
+    <a href="/">⬅️ Zurück</a>
+
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Link</th>
+            <th>Passwort</th>
+            <th>Aktionen</th>
+        </tr>
+        <tbody id="linkTable"></tbody>
+    </table>
+
+    <script>
+        async function loadLinks() {
+            const res = await fetch("/api/links");
+            const links = await res.json();
+            const table = document.getElementById("linkTable");
+            table.innerHTML = links.map(link => `
+                <tr>
+                    <td><input type="text" id="name-${link.id}" value="${link.name}"></td>
+                    <td><input type="text" id="url-${link.id}" value="${link.url}"></td>
+                    <td><input type="text" id="password-${link.id}" value="${link.password}"></td>
+                    <td>
+                        <button onclick="editLink(${link.id})">✏️ Bearbeiten</button>
+                        <button onclick="deleteLink(${link.id})">🗑️ Löschen</button>
+                    </td>
+                </tr>
+            `).join("");
+        }
+
+        async function deleteLink(id) {
+            await fetch(`/delete/${id}`, { method: "POST" });
+            loadLinks();
+        }
+
+        async function editLink(id) {
+            const name = document.getElementById(`name-${id}`).value;
+            const url = document.getElementById(`url-${id}`).value;
+            const password = document.getElementById(`password-${id}`).value;
+
+            await fetch(`/edit/${id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, url, password })
+            });
+
+            loadLinks();
+        }
+
+        loadLinks();
+    </script>
+
+</body>
+</html>
